@@ -21,6 +21,7 @@ public:
 	void Insert(int pos, int data);
 	int GetSize() const { return list_size; }
 	void DelNode(int index);
+	void ClearList();
 
 private:
 	// pointer the first node
@@ -111,6 +112,13 @@ void List::DelNode(int index)
 		--list_size;
 }
 
+// sheet cleaning
+void List::ClearList()
+{
+	p_head = nullptr;
+	list_size = 0;
+}
+
 
 
 
@@ -150,6 +158,10 @@ int main()
 	list.DelNode(11);
 
 	std::cout << "After remove nodes " << list.GetSize() << " items\n";
+
+	list.ClearList();
+
+	std::cout << "After cleaning list " << list.GetSize() << " items\n";
 
 
 	return 0;
