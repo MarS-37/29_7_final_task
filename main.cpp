@@ -22,7 +22,7 @@ private:
 };
 
 List::List() : ptr_head(nullptr) {}
-
+List::~List() {}
 
 int main()
 {
