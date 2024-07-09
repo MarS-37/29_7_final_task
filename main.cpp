@@ -17,6 +17,7 @@ public:
 	~List();
 
 	void PushBack(int data);
+	void PushFront(int data);
 
 private:
 	// pointer the first node
@@ -45,6 +46,13 @@ void List::PushBack(int data)
 	}
 }
 
+void List::PushFront(int data)
+{
+	// create a node and tie
+	// it to the current head
+	p_head = new Node(data, p_head);
+}
+
 
 int main()
 {
@@ -56,6 +64,13 @@ int main()
 	list.PushBack(3);
 	list.PushBack(4);
 	list.PushBack(5);
+
+	list.PushFront(6);
+	list.PushFront(7);
+	list.PushFront(8);
+	list.PushFront(9);
+	list.PushFront(10);
+	list.PushFront(11);
 
 
 	return 0;
