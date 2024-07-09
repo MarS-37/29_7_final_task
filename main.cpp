@@ -19,6 +19,7 @@ public:
 	void PushBack(int data);
 	void PushFront(int data);
 	void Insert(int pos, int data);
+	int GetSize() const { return list_size; }
 
 private:
 	// pointer the first node
@@ -26,7 +27,7 @@ private:
 	int list_size;
 };
 
-List::List() : p_head(nullptr) {}
+List::List() : p_head(nullptr), list_size(0) {}
 List::~List() {}
 
 // down the list
@@ -106,7 +107,9 @@ int main()
 	list.Insert(4, 14);
 	list.Insert(5, 15);
 	list.Insert(7, 16);
-	list.Insert(8, 17);
+	list.Insert(10, 17);
+
+	std::cout << "In container holds " << list.GetSize() << " items\n";
 
 
 	return 0;
