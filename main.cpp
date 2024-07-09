@@ -20,6 +20,7 @@ public:
 	void PushFront(int data);
 	void Insert(int pos, int data);
 	int GetSize() const { return list_size; }
+	void DelNode(int index);
 
 private:
 	// pointer the first node
@@ -64,9 +65,8 @@ void List::PushFront(int data)
 // in the specified position
 void List::Insert(int pos, int data)
 {
-	if (pos < 0 || pos > list_size) {
+	if (pos < 0 || pos > list_size)
 		throw std::out_of_range("Index out of range");
-	}
 
 	if (pos == 0) {
 		PushFront(data);
@@ -82,6 +82,37 @@ void List::Insert(int pos, int data)
 		++list_size;
 	}
 }
+
+// delete element by index
+void List::DelNode(int index)
+{
+	if (index < 0 || index >= list_size)
+		throw std::out_of_range("index out of range");
+
+		Node* p_delete = nullptr;
+
+		if (index == 0) {
+			// delete first node
+			p_delete = p_head;
+			p_head = p_head->p_next;
+		}
+		else {
+			Node* current = p_head;
+
+			for (int i = 0; i < index; ++i) {
+				current = current->p_next;
+			}
+
+			p_delete = current->p_next;
+			current->p_next = p_delete->p_next;
+		}
+
+		delete p_delete;
+		--list_size;
+}
+
+
+
 
 
 int main()
@@ -110,6 +141,15 @@ int main()
 	list.Insert(10, 17);
 
 	std::cout << "In container holds " << list.GetSize() << " items\n";
+
+	list.DelNode(0);
+	list.DelNode(3);
+	list.DelNode(7);
+	list.DelNode(9);
+	list.DelNode(10);
+	list.DelNode(11);
+
+	std::cout << "After remove nodes " << list.GetSize() << " items\n";
 
 
 	return 0;
