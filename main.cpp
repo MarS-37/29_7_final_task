@@ -1,15 +1,6 @@
 #include <iostream>
 
 
-struct Node
-{
-	Node* p_next;
-	int data;
-
-	Node(int data = int(), Node* p_next = nullptr) : data(data), p_next(p_next) {}
-};
-
-
 class List
 {
 public:
@@ -24,6 +15,14 @@ public:
 	void ClearList();
 
 private:
+	struct Node
+	{
+		Node* p_next;
+		int data;
+
+		Node(int data = int(), Node* p_next = nullptr) : data(data), p_next(p_next) {}
+	};
+
 	// pointer the first node
 	Node* p_head;
 	int list_size;
@@ -118,9 +117,6 @@ void List::ClearList()
 	p_head = nullptr;
 	list_size = 0;
 }
-
-
-
 
 
 int main()
