@@ -118,7 +118,12 @@ void List::Delete(int index)
 // sheet cleaning
 void List::ClearList()
 {
-	p_head = nullptr;
+	while (p_head != nullptr) {
+		Node* temp = p_head;
+		p_head = p_head->p_next;
+		delete temp;
+	}
+
 	list_size = 0;
 }
 
