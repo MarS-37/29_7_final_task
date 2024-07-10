@@ -103,7 +103,7 @@ void List::Delete(int index)
 		else {
 			Node* p_current = p_head;
 
-			for (int i = 0; i < index; ++i) {
+			for (int i = 0; i < index - 1; ++i) {
 				p_current = p_current->p_next;
 			}
 
@@ -130,7 +130,12 @@ void List::ClearList()
 // print list
 void List::PrintList()
 {	
-	
+	Node* p_current = p_head;
+
+	while (p_current != nullptr) {
+		std::cout << "(" << p_current->data << ") [" << p_current->p_next << "]\n";
+		p_current = p_current->p_next;
+	}
 }
 
 
@@ -154,6 +159,8 @@ int main()
 	list.PushFront(10);
 	list.PushFront(11);
 
+	list.PrintList();
+
 	list.Insert(0, 12);
 	list.Insert(2, 13);
 	list.Insert(4, 14);
@@ -163,6 +170,8 @@ int main()
 
 	std::cout << "In container holds " << list.GetSize() << " items\n";
 
+	list.PrintList();
+
 	list.Delete(0);
 	list.Delete(3);
 	list.Delete(7);
@@ -171,6 +180,8 @@ int main()
 	list.Delete(11);
 
 	std::cout << "After remove nodes " << list.GetSize() << " items\n";
+
+	list.PrintList();
 
 	list.ClearList();
 
@@ -182,3 +193,58 @@ int main()
 
 	return 0;
 }
+
+/*
+* ÐÅÇÓËÜÒÀÒ
+(0)[0000014E058B2B70]
+(1)[0000014E058B2DA0]
+(2)[0000014E058B3700]
+(3)[0000014E058B37F0]
+(4)[0000014E058B2E40]
+(5)[0000000000000000]
+(11)[0000014E058B3200]
+(10)[0000014E058B2A30]
+(9)[0000014E058B3160]
+(8)[0000014E058B2990]
+(7)[0000014E058B3390]
+(6)[0000014E058B34D0]
+(0)[0000014E058B2B70]
+(1)[0000014E058B2DA0]
+(2)[0000014E058B3700]
+(3)[0000014E058B37F0]
+(4)[0000014E058B2E40]
+(5)[0000000000000000]
+In container holds 18 items
+(12)[0000014E058B3480]
+(11)[0000014E058B2A80]
+(13)[0000014E058B3200]
+(10)[0000014E058B2E90]
+(14)[0000014E058B32A0]
+(15)[0000014E058B2A30]
+(9)[0000014E058B2D50]
+(16)[0000014E058B3160]
+(8)[0000014E058B2990]
+(7)[0000014E058B2AD0]
+(17)[0000014E058B3390]
+(6)[0000014E058B34D0]
+(0)[0000014E058B2B70]
+(1)[0000014E058B2DA0]
+(2)[0000014E058B3700]
+(3)[0000014E058B37F0]
+(4)[0000014E058B2E40]
+(5)[0000000000000000]
+After remove nodes 12 items
+(11)[0000014E058B2A80]
+(13)[0000014E058B3200]
+(10)[0000014E058B2E90]
+(14)[0000014E058B2A30]
+(9)[0000014E058B2D50]
+(16)[0000014E058B3160]
+(8)[0000014E058B2990]
+(7)[0000014E058B3390]
+(6)[0000014E058B34D0]
+(0)[0000014E058B2DA0]
+(2)[0000014E058B37F0]
+(4)[0000000000000000]
+After cleaning list 0 items
+*/
