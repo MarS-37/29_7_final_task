@@ -167,20 +167,6 @@ int& FineGrainList::GetNodeValue(int index)
 	return ptr_current->value;
 }
 
-// альтернативный метод для изменения значения узла по
-// индексу, метод соответстует алгоритму программы
-void FineGrainList::AddToNodeValue(int value, int index)
-{
-	if (index < 0 || index >= size_list) return;
-
-	Node* ptr_current = ptr_head;
-	for (int i = 0; i < index; ++i) {
-		ptr_current = ptr_current->ptr_next;
-	}
-
-	ptr_current->value += value;
-}
-
 // печать контейнера List
 void FineGrainList::PrintList()
 {
@@ -203,28 +189,47 @@ int FineGrainList::GetListSize()
 int main()
 {
 	setlocale(LC_ALL, "");
-	FineGrainList list(0);
-
-	list.CreateNode(1, 1);
-	list.CreateNode(2, 2);
-	list.CreateNode(3, 3);
-	list.CreateNode(4, 3);
-	list.CreateNode(5, 1);
-
+	FineGrainList list(5);
+	std::cout << "\nСоздан узел индекс: 0" << std::endl;
 	list.PrintList();
 
+	// минимум и максимум диапазона
+	int min{ -1 }, max{ 1 };
 
-	std::cout << "Значение индекса 2: " << list.GetNodeValue(2) << std::endl;
+	while (list.GetListSize() < 20) {
+		// получаем индех от 0 до размера листа - 1
+		int index = list.GetRandNum(0, list.GetListSize() - 1);
 
-	list.AddToNodeValue(10, 5);
+		// получаем значение узла
+		int value = list.GetNodeValue(index);
 
-	// Use the reference returned by GetNodeValue to modify the node's value
-	int& change_value = list.GetNodeValue(3);
-	change_value = 123;
+		// вычисляем новое значение
+		value += list.GetRandNum(min, max);
 
-	std::cout << "Значение индекса 3: " << change_value << std::endl;
+		// если значение узла больше 10...
+		if (value < 0) {
+			if (list.GetListSize() > 1) {
+				list.DeleteNode(index);
+				std::cout << "\nУдален узел индекс: " << index << std::endl;
+				list.PrintList();
+			}
+			else {
+				value = 5;
+			}			
+		}
+		else {
+			if (value > 10) {
+				value = 5;
 
-	list.PrintList();
+				list.CreateNode(5, index + 1);
+				std::cout << "\nДобавлен узел индекс: " << index << std::endl;
+				list.PrintList();
+			}
+
+			list.SetNodeValue(value, index);			
+		}
+	}
+
 
 	return 0;
 }
