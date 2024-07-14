@@ -1,235 +1,189 @@
 #include <iostream>
+#include <memory>
+#include <random>
+#include <ctime>
 
-// абстрактный класс
-class Random
-{
+
+class Random {
 public:
-	// виртуальная функция
-	virtual int GetRandNum(int start, int end) = 0;
+    virtual int GetRandNum(int start, int end) = 0;
 };
 
-// FineGrainQueue
-class FineGrainList : public Random
-{
-public:
-	// конструктор, инициализирует первый узел
-	FineGrainList(int value);
-	// деструктор, освобождаем память
-	~FineGrainList();
 
-	// виртуальная функция
-	int  GetRandNum(int start, int end) override;
-	// метод создание узла
-	void CreateNode(int value, int index);
-	// метод удаления узла
-	void DeleteNode(int index);
-	// метод для изменения значения узла по индексу
-	void SetNodeValue(int value, int index);
-	// метод для получения значения узла по индексу
-	int& GetNodeValue(int index);
-	// метод для прибавления значения к узлу по индексу
-	void AddToNodeValue(int value, int index);
-	// печать листа
-	void PrintList();
-	// метод возвращает размер списка
-	int  GetListSize();
+class FineGrainList : public Random {
+public:
+    FineGrainList(int value);
+    ~FineGrainList();
+
+    int GetRandNum(int start, int end) override;
+    void CreateNode(int value, int index);
+    void DeleteNode(int index);
+    void SetNodeValue(int value, int index);
+    int& GetNodeValue(int index);
+    void PrintList();
+    int GetListSize();
 
 private:
-	struct Node
-	{
-		// данные узла
-		int value;
-		// указатель на следующий узел
-		Node* ptr_next;
-	};
+    struct Node {
+        int value;
+        std::unique_ptr<Node> ptr_next;
 
-	// указатель на начало листа
-	Node* ptr_head;
-	// размер контейнера
-	int size_list;
+        Node(int val) : value(val), ptr_next(nullptr) {}
+    };
+
+    std::unique_ptr<Node> ptr_head;
+    int size_list;
+
+    // индекс последнего добавленного узла
+    int last_added_index;
+    // флаг для подсветки последнего добавленного узла
+    bool flag_last_added;
+
+    std::mt19937 rng;
 };
 
-// конструктор, инициализирует первый узел
 FineGrainList::FineGrainList(int value)
-	: ptr_head(new Node{ value, nullptr }), size_list(1)
-{
-	// инициализация rand()
-	std::srand(std::time(0));
+    : ptr_head(std::make_unique<Node>(value)), size_list(1), rng(std::random_device{}()),
+    last_added_index(-1), flag_last_added(false) {}
+
+FineGrainList::~FineGrainList() = default;
+
+int FineGrainList::GetRandNum(int start, int end) {
+    std::uniform_int_distribution<int> dist(start, end);
+    return dist(rng);
 }
 
-// деструктор, освобождаем память
-FineGrainList::~FineGrainList()
-{
-	// получаем указатель начала листа
-	Node* ptr_current = ptr_head;
+void FineGrainList::CreateNode(int value, int index) {
+    auto new_node = std::make_unique<Node>(value);
 
-	// поэлементный обход листа
-	while (ptr_current != nullptr) {
-		// сохраняем текущий указатель
-		Node* temp = ptr_current;
-		// получаем указатель следующего элемента
-		ptr_current = ptr_current->ptr_next;
-		// освобождаем память предыдущего элемента
-		delete temp;
-	}
+    if (index <= 0) {
+        new_node->ptr_next = std::move(ptr_head);
+        ptr_head = std::move(new_node);
+        last_added_index = 0;
+    }
+    else if (index >= size_list) {
+        Node* ptr_current = ptr_head.get();
+        while (ptr_current->ptr_next) {
+            ptr_current = ptr_current->ptr_next.get();
+        }
+        ptr_current->ptr_next = std::move(new_node);
+        last_added_index = size_list;
+    }
+    else {
+        Node* ptr_current = ptr_head.get();
+        for (int i = 1; i < index; ++i) {
+            ptr_current = ptr_current->ptr_next.get();
+        }
+        new_node->ptr_next = std::move(ptr_current->ptr_next);
+        ptr_current->ptr_next = std::move(new_node);
+        last_added_index = index;
+    }
+
+    flag_last_added = true;
+    ++size_list;
 }
 
-// реализация виртуальной функции случауное число
-int FineGrainList::GetRandNum(int start, int end)
-{
-	return start + rand() % ((end + 1) - start);
+void FineGrainList::DeleteNode(int index) {
+    if (index < 0 || index >= size_list) return;
+
+    if (index == 0) {
+        ptr_head = std::move(ptr_head->ptr_next);
+    }
+    else {
+        Node* ptr_current = ptr_head.get();
+        for (int i = 1; i < index && ptr_current->ptr_next; ++i) {
+            ptr_current = ptr_current->ptr_next.get();
+        }
+        if (ptr_current && ptr_current->ptr_next) {
+            ptr_current->ptr_next = std::move(ptr_current->ptr_next->ptr_next);
+        }
+    }
+
+    flag_last_added = false;
+    --size_list;
 }
 
-// реализация метода создания нода
-void FineGrainList::CreateNode(int value, int index)
-{
-	Node* new_node = new Node{ value, nullptr };
+void FineGrainList::SetNodeValue(int value, int index) {
+    if (index < 0 || index >= size_list) return;
 
-	// если индекс меньше или равен 0
-	if (index <= 0) {
-		new_node->ptr_next = ptr_head;
-		ptr_head = new_node;
-	}
-	// если индекс больше размера контейнера
-	else if (index >= size_list) {
-		Node* ptr_current = ptr_head;
+    Node* ptr_current = ptr_head.get();
+    for (int i = 0; i < index; ++i) {
+        ptr_current = ptr_current->ptr_next.get();
+    }
 
-		while (ptr_current->ptr_next != nullptr) {
-			ptr_current = ptr_current->ptr_next;
-		}
-
-		ptr_current->ptr_next = new_node;
-	}
-	// индекс в диапазоне контейнера
-	else {
-		Node* ptr_current = ptr_head;
-
-		for (int i = 1; i < index; ++i) {
-			ptr_current = ptr_current->ptr_next;
-		}
-
-		new_node->ptr_next = ptr_current->ptr_next;
-		ptr_current->ptr_next = new_node;
-	}
-
-	++size_list;
+    ptr_current->value = value;
 }
 
-// реализация метода удаления узла
-void FineGrainList::DeleteNode(int index)
-{
-	if (index < 0 || ptr_head == nullptr) return;
+int& FineGrainList::GetNodeValue(int index) {
+    if (index < 0 || index >= size_list) {
+        throw std::out_of_range("Index out of range");
+    }
 
-	Node* ptr_to_delete = nullptr;
+    Node* ptr_current = ptr_head.get();
+    for (int i = 0; i < index; ++i) {
+        ptr_current = ptr_current->ptr_next.get();
+    }
 
-	if (index == 0) {
-		ptr_to_delete = ptr_head;
-		ptr_head = ptr_head->ptr_next;
-	}
-	else {
-		Node* ptr_current = ptr_head;
-		for (int i = 1; i < index && ptr_current->ptr_next->ptr_next != nullptr; ++i) {
-			ptr_current = ptr_current->ptr_next;
-		}
-		ptr_to_delete = ptr_current->ptr_next;
-		ptr_current->ptr_next = ptr_to_delete->ptr_next;
-	}
-
-	delete ptr_to_delete;
-	--size_list;
+    return ptr_current->value;
 }
 
-// метод для изменения значения узла по индексу
-void FineGrainList::SetNodeValue(int value, int index)
-{
-	if (index < 0 || index >= size_list) return;
+void FineGrainList::PrintList() {
+    Node* ptr_current = ptr_head.get();
+    int index = 0;
 
-	Node* ptr_current = ptr_head;
-	for (int i = 0; i < index; ++i) {
-		ptr_current = ptr_current->ptr_next;
-	}
+    while (ptr_current) {
+        if (flag_last_added && index == last_added_index && ptr_current->value == 5) {
+            std::cout << "\033[1;32m[" << ptr_current->value << "]\033[0m";
+        }
+        else {
+            std::cout << '[' << ptr_current->value << "]";
+        }
+        ptr_current = ptr_current->ptr_next.get();
+        ++index;
+    }
 
-	ptr_current->value = value;
+    std::cout << std::endl;
 }
 
-// метод для получения значения узла по индексу
-// с возможностью изменения значения
-int& FineGrainList::GetNodeValue(int index)
-{
-	if (index < 0 || index >= size_list)
-		throw std::out_of_range("Index out of range");
-
-	Node* ptr_current = ptr_head;
-	for (int i = 0; i < index; ++i) {
-		ptr_current = ptr_current->ptr_next;
-	}
-
-	return ptr_current->value;
+int FineGrainList::GetListSize() {
+    return size_list;
 }
 
-// печать контейнера List
-void FineGrainList::PrintList()
-{
-	Node* ptr_current = ptr_head;
 
-	while (ptr_current != nullptr) {
-		std::cout << '[' << ptr_current->value << "]";
-		ptr_current = ptr_current->ptr_next;
-	}
+int main() {
+    setlocale(LC_ALL, "");
+    FineGrainList list(5);
+    std::cout << "\nСоздан узел индекс: 0" << std::endl;
+    list.PrintList();
 
-	std::cout << std::endl;
-}
+    int min{ -1 }, max{ 1 };
 
-// метод возвращает размер списка
-int FineGrainList::GetListSize()
-{
-	return size_list;
-}
+    while (list.GetListSize() < 20) {
+        int index = list.GetRandNum(0, list.GetListSize() - 1);
+        int value = list.GetNodeValue(index);
+        value += list.GetRandNum(min, max);
 
-int main()
-{
-	setlocale(LC_ALL, "");
-	FineGrainList list(5);
-	std::cout << "\nСоздан узел индекс: 0" << std::endl;
-	list.PrintList();
+        if (value < 0) {
+            if (list.GetListSize() > 1) {
+                list.DeleteNode(index);
+                std::cout << "\nУдален узел индекс: " << index << std::endl;
+                list.PrintList();
+            }
+            else {
+                value = 5;
+            }
+        }
+        else {
+            if (value > 10) {
+                value = 5;
+                list.CreateNode(5, index + 1);
+                std::cout << "\nДобавлен узел индекс: " << index + 1 << std::endl;
+                list.PrintList();
+            }
 
-	// минимум и максимум диапазона
-	int min{ -1 }, max{ 1 };
+            list.SetNodeValue(value, index);
+        }
+    }
 
-	while (list.GetListSize() < 20) {
-		// получаем индех от 0 до размера листа - 1
-		int index = list.GetRandNum(0, list.GetListSize() - 1);
-
-		// получаем значение узла
-		int value = list.GetNodeValue(index);
-
-		// вычисляем новое значение
-		value += list.GetRandNum(min, max);
-
-		// если значение узла больше 10...
-		if (value < 0) {
-			if (list.GetListSize() > 1) {
-				list.DeleteNode(index);
-				std::cout << "\nУдален узел индекс: " << index << std::endl;
-				list.PrintList();
-			}
-			else {
-				value = 5;
-			}			
-		}
-		else {
-			if (value > 10) {
-				value = 5;
-
-				list.CreateNode(5, index + 1);
-				std::cout << "\nДобавлен узел индекс: " << index << std::endl;
-				list.PrintList();
-			}
-
-			list.SetNodeValue(value, index);			
-		}
-	}
-
-
-	return 0;
+    return 0;
 }
