@@ -166,3 +166,65 @@ int& FineGrainList::GetNodeValue(int index)
 
 	return ptr_current->value;
 }
+
+// альтернативный метод для изменения значения узла по
+// индексу, метод соответстует алгоритму программы
+void FineGrainList::AddToNodeValue(int value, int index)
+{
+	if (index < 0 || index >= size_list) return;
+
+	Node* ptr_current = ptr_head;
+	for (int i = 0; i < index; ++i) {
+		ptr_current = ptr_current->ptr_next;
+	}
+
+	ptr_current->value += value;
+}
+
+// печать контейнера List
+void FineGrainList::PrintList()
+{
+	Node* ptr_current = ptr_head;
+
+	while (ptr_current != nullptr) {
+		std::cout << '[' << ptr_current->value << "]";
+		ptr_current = ptr_current->ptr_next;
+	}
+
+	std::cout << std::endl;
+}
+
+// метод возвращает размер списка
+int FineGrainList::GetListSize()
+{
+	return size_list;
+}
+
+int main()
+{
+	setlocale(LC_ALL, "");
+	FineGrainList list(0);
+
+	list.CreateNode(1, 1);
+	list.CreateNode(2, 2);
+	list.CreateNode(3, 3);
+	list.CreateNode(4, 3);
+	list.CreateNode(5, 1);
+
+	list.PrintList();
+
+
+	std::cout << "Значение индекса 2: " << list.GetNodeValue(2) << std::endl;
+
+	list.AddToNodeValue(10, 5);
+
+	// Use the reference returned by GetNodeValue to modify the node's value
+	int& change_value = list.GetNodeValue(3);
+	change_value = 123;
+
+	std::cout << "Значение индекса 3: " << change_value << std::endl;
+
+	list.PrintList();
+
+	return 0;
+}
