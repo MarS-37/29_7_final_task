@@ -138,3 +138,31 @@ void FineGrainList::DeleteNode(int index)
 	delete ptr_to_delete;
 	--size_list;
 }
+
+// метод для изменения значения узла по индексу
+void FineGrainList::SetNodeValue(int value, int index)
+{
+	if (index < 0 || index >= size_list) return;
+
+	Node* ptr_current = ptr_head;
+	for (int i = 0; i < index; ++i) {
+		ptr_current = ptr_current->ptr_next;
+	}
+
+	ptr_current->value = value;
+}
+
+// метод для получения значения узла по индексу
+// с возможностью изменения значения
+int& FineGrainList::GetNodeValue(int index)
+{
+	if (index < 0 || index >= size_list)
+		throw std::out_of_range("Index out of range");
+
+	Node* ptr_current = ptr_head;
+	for (int i = 0; i < index; ++i) {
+		ptr_current = ptr_current->ptr_next;
+	}
+
+	return ptr_current->value;
+}
