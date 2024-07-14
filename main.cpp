@@ -114,3 +114,27 @@ void FineGrainList::CreateNode(int value, int index)
 
 	++size_list;
 }
+
+// реализация метода удаления узла
+void FineGrainList::DeleteNode(int index)
+{
+	if (index < 0 || ptr_head == nullptr) return;
+
+	Node* ptr_to_delete = nullptr;
+
+	if (index == 0) {
+		ptr_to_delete = ptr_head;
+		ptr_head = ptr_head->ptr_next;
+	}
+	else {
+		Node* ptr_current = ptr_head;
+		for (int i = 1; i < index && ptr_current->ptr_next->ptr_next != nullptr; ++i) {
+			ptr_current = ptr_current->ptr_next;
+		}
+		ptr_to_delete = ptr_current->ptr_next;
+		ptr_current->ptr_next = ptr_to_delete->ptr_next;
+	}
+
+	delete ptr_to_delete;
+	--size_list;
+}
