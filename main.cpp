@@ -18,13 +18,14 @@ public:
 };
 
 
-// название класса gj по заданию FineGrainedQueue заменено на 
-// FineGrainList, так как используется контейнер "Linked-List"
-class FineGrainList : public Random {
+// название класса по заданию FineGrainedQueue заменено на 
+// FineGrainList, из-за использования "Linked-List"
+class FineGrainList : public Random
+{
 public:
     FineGrainList(int value);
     ~FineGrainList() = default;
-    
+
     // получает случацное число в диапазоне start, end
     int GetRandNum(int start, int end) override;
     // добавляет новый узел в заданное место, замена предложенной
@@ -43,8 +44,11 @@ public:
     int GetListSize() const;
 
 private:
-    struct Node {
+    struct Node
+    {
+        // значение
         int value;
+        // 
         std::unique_ptr<Node> ptr_next;
         std::mutex node_mutex;
 
@@ -54,26 +58,35 @@ private:
     std::unique_ptr<Node> ptr_head;
     mutable std::mutex head_mutex;
     int size_list;
+
+    // вспомогательные флаги
+    // добавление узлов
     int last_added_index;
-    bool flag_last_added;
+    mutable bool flag_last_added;
+    // удаление узлов
+    int last_deleted_index;
+    mutable bool flag_last_deleted;
 };
 
 FineGrainList::FineGrainList(int value)
-    : ptr_head(std::make_unique<Node>(value)), size_list(1), last_added_index(0), flag_last_added(false) {
+    : ptr_head(std::make_unique<Node>(value)), size_list(1), last_added_index(0), flag_last_added(true)
+{
     std::srand(std::time(0));
 }
 
-int FineGrainList::GetRandNum(int start, int end) {
+int FineGrainList::GetRandNum(int start, int end)
+{
     return start + rand() % ((end + 1) - start);
 }
 
-void FineGrainList::CreateNode(int value, int index) {
-    auto new_node = std::make_unique<Node>(value);
+void FineGrainList::CreateNode(int value, int index)
+{
+    auto p_new_node = std::make_unique<Node>(value);
 
     std::unique_lock<std::mutex> head_lock(head_mutex);
     if (index <= 0) {
-        new_node->ptr_next = std::move(ptr_head);
-        ptr_head = std::move(new_node);
+        p_new_node->ptr_next = std::move(ptr_head);
+        ptr_head = std::move(p_new_node);
         last_added_index = 0;
     }
     else {
@@ -89,18 +102,22 @@ void FineGrainList::CreateNode(int value, int index) {
             }
         }
 
-        new_node->ptr_next = std::move(ptr_current->ptr_next);
-        ptr_current->ptr_next = std::move(new_node);
+        p_new_node->ptr_next = std::move(ptr_current->ptr_next);
+        ptr_current->ptr_next = std::move(p_new_node);
         last_added_index = index;
     }
 
-    std::cout << "\nДобавлен узел индекс: " << index + 1 << std::endl;
+    std::cout << "\nДобавлен узел индекс: " << index << std::endl;
 
     flag_last_added = true;
+    // flag_last_deleted = false;
     ++size_list;
 }
 
-void FineGrainList::DeleteNode(int index) {
+void FineGrainList::DeleteNode(int index)
+{
+    last_deleted_index = index;
+
     std::unique_lock<std::mutex> head_lock(head_mutex);
     if (index < 0 || index >= size_list) return;
 
@@ -110,8 +127,10 @@ void FineGrainList::DeleteNode(int index) {
     else {
         Node* ptr_current = ptr_head.get();
         std::unique_lock<std::mutex> lock(ptr_current->node_mutex);
+
         for (int i = 1; i < index && ptr_current->ptr_next; ++i) {
             Node* next_node = ptr_current->ptr_next.get();
+
             if (next_node) {
                 std::unique_lock<std::mutex> next_lock(next_node->node_mutex);
                 lock.unlock();
@@ -119,18 +138,21 @@ void FineGrainList::DeleteNode(int index) {
                 lock = std::move(next_lock);
             }
         }
+
         if (ptr_current && ptr_current->ptr_next) {
             ptr_current->ptr_next = std::move(ptr_current->ptr_next->ptr_next);
         }
     }
 
-    std::cout << "\nУдален узел индекс: " << index << std::endl;
+    std::cout << "\nУдаляем узел индекс: " << index << std::endl;
 
-    flag_last_added = false;
+    // flag_last_added = false;
+    flag_last_deleted = true;
     --size_list;
 }
 
-void FineGrainList::SetNodeValue(int value, int index) {
+void FineGrainList::SetNodeValue(int value, int index)
+{
     std::unique_lock<std::mutex> head_lock(head_mutex);
     if (index < 0 || index >= size_list) return;
 
@@ -149,7 +171,8 @@ void FineGrainList::SetNodeValue(int value, int index) {
     ptr_current->value = value;
 }
 
-int& FineGrainList::GetNodeValue(int index) {
+int& FineGrainList::GetNodeValue(int index)
+{
     std::unique_lock<std::mutex> head_lock(head_mutex);
     if (index < 0) {
         throw std::out_of_range("Index out of range");
@@ -173,32 +196,50 @@ int& FineGrainList::GetNodeValue(int index) {
     return ptr_current->value;
 }
 
-void FineGrainList::PrintList() const {
+void FineGrainList::PrintList() const
+{
     std::unique_lock<std::mutex> head_lock(head_mutex);
     Node* ptr_current = ptr_head.get();
     int index = 0;
 
-    while (ptr_current) {
+    do {
         std::unique_lock<std::mutex> lock(ptr_current->node_mutex);
         if (flag_last_added && index == last_added_index && ptr_current->value == 5) {
             std::cout << "\033[1;32m[" << ptr_current->value << "]\033[0m";
+            ptr_current = ptr_current->ptr_next.get();
+            flag_last_added = false;
+        }
+        else if (flag_last_deleted && index == last_deleted_index) {
+            std::cout << "\033[1;31m[" << "x" << "]\033[0m";
+            flag_last_deleted = false;
+            --index;
         }
         else {
             std::cout << '[' << ptr_current->value << "]";
+            ptr_current = ptr_current->ptr_next.get();
         }
-        ptr_current = ptr_current->ptr_next.get();
+
         ++index;
-    }
+
+        if (flag_last_deleted && index == last_deleted_index) {
+            std::cout << "\033[1;31m[" << "x" << "]\033[0m";
+            flag_last_deleted = false;
+            --index;
+        }
+                
+    } while (ptr_current);
 
     std::cout << std::endl;
 }
 
-int FineGrainList::GetListSize() const {
+int FineGrainList::GetListSize() const
+{
     std::unique_lock<std::mutex> lock(head_mutex);
     return size_list;
 }
 
-void ThreadFunction(FineGrainList& list, int max_node_count, int new_value_node, int min, int max) {
+void ThreadFunction(FineGrainList& list, int max_node_count, int new_value_node, int min, int max)
+{
     while (list.GetListSize() < max_node_count) {
         int list_size = list.GetListSize();
         int index = list.GetRandNum(0, std::max(0, list_size - 1));
@@ -228,6 +269,7 @@ void ThreadFunction(FineGrainList& list, int max_node_count, int new_value_node,
     }
 }
 
+
 int main()
 {
     setlocale(LC_ALL, "");
@@ -246,7 +288,7 @@ int main()
     // создание первого узла с индексом 0
     std::cout << "\nСоздан узел индекс: 0" << std::endl;
     list.PrintList();
-        
+
     std::vector<std::thread> threads;
 
     for (int i = 0; i < num_threads; ++i) {
@@ -259,6 +301,9 @@ int main()
 
     std::cout << "\nПрограмма выполнена, достигнуто максимальное количество узлов: "
         << max_node_count << std::endl;
+
+
+    // std::system("pause");
 
     return 0;
 }
