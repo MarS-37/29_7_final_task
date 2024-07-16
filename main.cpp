@@ -1,13 +1,13 @@
+#include <algorithm>
+#include <stdexcept>
 #include <iostream>
+#include <cstdlib>
 #include <vector>
 #include <memory>
 #include <thread>
-#include <mutex>
-#include <cstdlib>
-#include <ctime>
-#include <stdexcept>
 #include <locale>
-#include <algorithm>
+#include <mutex>
+#include <ctime>
 
 
 // абстрактный класс
@@ -39,7 +39,7 @@ public:
     // добавлена возможность изменения значения узла
     int& GetNodeValue(int index);
     // выводит список "Linked-List"
-    void PrintList() const;
+    void PrintListInfo() const;
     // возвращает размер списка
     int GetListSize() const;
 
@@ -106,11 +106,8 @@ void FineGrainList::CreateNode(int value, int index)
         ptr_current->ptr_next = std::move(p_new_node);
         last_added_index = index;
     }
-
-    std::cout << "\nДобавлен узел индекс: " << index << std::endl;
-
+    
     flag_last_added = true;
-    // flag_last_deleted = false;
     ++size_list;
 }
 
@@ -143,10 +140,8 @@ void FineGrainList::DeleteNode(int index)
             ptr_current->ptr_next = std::move(ptr_current->ptr_next->ptr_next);
         }
     }
+     
 
-    std::cout << "\nУдаляем узел индекс: " << index << std::endl;
-
-    // flag_last_added = false;
     flag_last_deleted = true;
     --size_list;
 }
@@ -196,10 +191,16 @@ int& FineGrainList::GetNodeValue(int index)
     return ptr_current->value;
 }
 
-void FineGrainList::PrintList() const
+void FineGrainList::PrintListInfo() const
 {
     std::unique_lock<std::mutex> head_lock(head_mutex);
     Node* ptr_current = ptr_head.get();
+
+    if(flag_last_added)
+        std::cout << "\nДобавлен узел индекс: " << last_added_index << std::endl;
+    if(flag_last_deleted)
+        std::cout << "\nУдаляем узел индекс: " << last_deleted_index << std::endl;
+
     int index = 0;
 
     do {
@@ -238,6 +239,7 @@ int FineGrainList::GetListSize() const
     return size_list;
 }
 
+
 void ThreadFunction(FineGrainList& list, int max_node_count, int new_value_node, int min, int max)
 {
     while (list.GetListSize() < max_node_count) {
@@ -250,7 +252,7 @@ void ThreadFunction(FineGrainList& list, int max_node_count, int new_value_node,
             if (list.GetListSize() > 1) {
                 list.DeleteNode(index);
 
-                list.PrintList();
+                list.PrintListInfo();
             }
             else {
                 value = new_value_node;
@@ -261,7 +263,7 @@ void ThreadFunction(FineGrainList& list, int max_node_count, int new_value_node,
                 value = new_value_node;
                 list.CreateNode(new_value_node, index + 1);
 
-                list.PrintList();
+                list.PrintListInfo();
             }
 
             list.SetNodeValue(value, index);
@@ -287,7 +289,7 @@ int main()
 
     // создание первого узла с индексом 0
     std::cout << "\nСоздан узел индекс: 0" << std::endl;
-    list.PrintList();
+    list.PrintListInfo();
 
     std::vector<std::thread> threads;
 
