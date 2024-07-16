@@ -1,3 +1,12 @@
+//+------------------------------------------------------------------+
+//|                       29.7. ИТОГОВОЕ ЗАДАНИЕ                     |
+//|                                                                  |
+//|          ПРОТЕСТИРОВАНА: MSVC v.143 - VS 2022 C++ 86/64          |
+//|                                                                  |
+//|                   https://github.com/MarS-37/29_7_final_task.git |
+//|                                       markin.sergey.37@yandex.ru |
+//+------------------------------------------------------------------+
+
 #include <algorithm>
 #include <stdexcept>
 #include <iostream>
@@ -74,16 +83,16 @@ FineGrainList::FineGrainList(int value)
     std::srand(std::time(0));
 }
 
-int FineGrainList::GetRandNum(int start, int end)
+int FineGrainList::GetRandNum(int min, int end)
 {
-    return start + rand() % ((end + 1) - start);
+    return min + rand() % ((end + 1) - min);
 }
 
 void FineGrainList::CreateNode(int value, int index)
 {
     auto p_new_node = std::make_unique<Node>(value);
-
     std::unique_lock<std::mutex> head_lock(head_mutex);
+
     if (index <= 0) {
         p_new_node->ptr_next = std::move(ptr_head);
         ptr_head = std::move(p_new_node);
@@ -92,8 +101,10 @@ void FineGrainList::CreateNode(int value, int index)
     else {
         Node* ptr_current = ptr_head.get();
         std::unique_lock<std::mutex> lock(ptr_current->node_mutex);
+
         for (int i = 1; i < index; ++i) {
             Node* next_node = ptr_current->ptr_next.get();
+
             if (next_node) {
                 std::unique_lock<std::mutex> next_lock(next_node->node_mutex);
                 lock.unlock();
@@ -113,11 +124,12 @@ void FineGrainList::CreateNode(int value, int index)
 
 void FineGrainList::DeleteNode(int index)
 {
-    last_deleted_index = index;
-
     std::unique_lock<std::mutex> head_lock(head_mutex);
+
     if (index < 0 || index >= size_list) return;
 
+    last_deleted_index = index;
+        
     if (index == 0) {
         ptr_head = std::move(ptr_head->ptr_next);
     }
@@ -139,8 +151,7 @@ void FineGrainList::DeleteNode(int index)
         if (ptr_current && ptr_current->ptr_next) {
             ptr_current->ptr_next = std::move(ptr_current->ptr_next->ptr_next);
         }
-    }
-     
+    }     
 
     flag_last_deleted = true;
     --size_list;
@@ -149,12 +160,15 @@ void FineGrainList::DeleteNode(int index)
 void FineGrainList::SetNodeValue(int value, int index)
 {
     std::unique_lock<std::mutex> head_lock(head_mutex);
+
     if (index < 0 || index >= size_list) return;
 
     Node* ptr_current = ptr_head.get();
     std::unique_lock<std::mutex> lock(ptr_current->node_mutex);
+
     for (int i = 0; i < index; ++i) {
         Node* next_node = ptr_current->ptr_next.get();
+
         if (next_node) {
             std::unique_lock<std::mutex> next_lock(next_node->node_mutex);
             lock.unlock();
@@ -169,9 +183,11 @@ void FineGrainList::SetNodeValue(int value, int index)
 int& FineGrainList::GetNodeValue(int index)
 {
     std::unique_lock<std::mutex> head_lock(head_mutex);
+
     if (index < 0) {
         throw std::out_of_range("Index out of range");
     }
+
     if (index >= size_list) {
         index = size_list - 1;
     }
@@ -285,10 +301,9 @@ int main()
     // количество потоков
     const int num_threads = 4;
 
-    FineGrainList list(new_value_node);
-
     // создание первого узла с индексом 0
-    std::cout << "\nСоздан узел индекс: 0" << std::endl;
+    FineGrainList list(new_value_node);
+    
     list.PrintListInfo();
 
     std::vector<std::thread> threads;
