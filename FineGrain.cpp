@@ -185,14 +185,14 @@ void FineGrainList::PrintListInfo() const
             std::lock_guard<std::mutex> flag_last_added_lock(flag_last_added_mutex);
 
             if (flag_last_added)
-                std::cout << "\nДобавлен узел индекса: " << last_added_index << std::endl;
+                std::cout << "\nIndex node added: " << last_added_index << std::endl;
         }
         {
             // locking the last deleted flag
             std::lock_guard<std::mutex> flag_last_deleted_lock(flag_last_deleted_mutex);
 
             if (flag_last_deleted)
-                std::cout << "\nУдаляем узел индекс: " << last_deleted_index << std::endl;
+                std::cout << "\nDeleting the index node: " << last_deleted_index << std::endl;
         }
 
         unsigned int index = 0;
