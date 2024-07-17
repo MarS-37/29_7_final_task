@@ -78,7 +78,7 @@ int main()
         t.join();
     }
 
-    std::cout << "\nПрограмма выполнена, достигнуто максимальное количество узлов: "
+    std::cout << "\nProgram executed, maximum number of nodes reached: "
         << max_node_count << std::endl;
 
 
