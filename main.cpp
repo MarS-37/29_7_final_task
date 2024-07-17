@@ -58,7 +58,7 @@ int main()
     // node change range
     const int min = -1, max = 1;
     // number of threads
-    const int num_threads = 4;
+    const int num_threads = 2;
 
     // creating the first node with index 0
     FineGrainList list(new_value_node);
